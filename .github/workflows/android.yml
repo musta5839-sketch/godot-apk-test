@@ -9,39 +9,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y unzip curl openjdk-17-jdk
 
       - name: Install Android SDK
         uses: android-actions/setup-android@v3
         with:
           cmdline-tools-version: 11076708
 
-      - name: Download Godot 4.2.2 from GitHub ONLY
+      - name: Download Godot 4.2.2 (GitHub release only)
         run: |
-          set -e
           GODOT_VERSION=4.2.2
-          echo "Downloading Godot from GitHub Releases..."
           curl -L --retry 5 --retry-delay 5 \
             https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip \
             -o godot.zip
-
-          unzip -o godot.zip
+          unzip godot.zip
+          chmod +x Godot_v${GODOT_VERSION}-stable_linux.x86_64
           mv Godot_v${GODOT_VERSION}-stable_linux.x86_64 godot
-          chmod +x godot
-          ./godot --version
 
-      - name: Build Android APK
+      - name: Export Android APK
         run: |
           mkdir -p build
           ./godot --headless --export-release "Android" build/app-release.apk
 
-      - name: Upload APK artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
