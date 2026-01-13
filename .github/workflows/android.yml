@@ -2,14 +2,14 @@ name: Build Android APK (Godot 4.2.2)
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Setup Godot
@@ -18,20 +18,18 @@ jobs:
           version: 4.2.2
           use-dotnet: false
 
-      - name: Install Android Export Templates
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android export templates
         run: |
           mkdir -p ~/.local/share/godot/export_templates/4.2.2.stable
           curl -L https://github.com/godotengine/godot/releases/download/4.2.2-stable/Godot_v4.2.2-stable_export_templates.tpz -o templates.tpz
-          unzip templates.tpz -d ~/.local/share/godot/export_templates/4.2.2.stable
-
-      - name: Install Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          cmdline-tools-version: 11076708
+          unzip templates.tpz
+          mv templates/* ~/.local/share/godot/export_templates/4.2.2.stable/
 
       - name: Export Android APK
         run: |
-          mkdir -p build
           godot --headless --export-release "Android" build/app-release.apk
 
       - name: Upload APK
