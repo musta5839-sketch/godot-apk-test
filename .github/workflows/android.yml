@@ -5,33 +5,34 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-android:
+  build:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Godot 4.2.2 + Android export templates
-        uses: firebelley/setup-godot@v2
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
         with:
           version: 4.2.2
-          export-templates: true
+          use-dotnet: false
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: 11076708
 
-      - name: Verify Godot
+      - name: Install Android export templates
         run: |
-          godot --version
-          ls ~/.local/share/godot/export_templates
+          godot --headless --install-android-export-templates
 
       - name: Build Android APK
         run: |
           mkdir -p build
           godot --headless --export-release "Android" build/app-release.apk
 
-      - name: Upload APK artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
