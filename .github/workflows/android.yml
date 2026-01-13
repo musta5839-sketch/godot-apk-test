@@ -3,35 +3,75 @@ name: Build Android APK (Godot)
 on:
   push:
     branches: [ "main" ]
+    tags:
+      - "v*"
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download Godot Headless
+      # ----------------------------
+      # Install dependencies
+      # ----------------------------
+      - name: Install system dependencies
         run: |
-          wget https://downloads.tuxfamily.org/godotengine/4.2.1/Godot_v4.2.1-stable_linux.x86_64.zip
-          unzip Godot_v4.2.1-stable_linux.x86_64.zip
-          chmod +x Godot_v4.2.1-stable_linux.x86_64
-          mv Godot_v4.2.1-stable_linux.x86_64 godot
+          sudo apt-get update
+          sudo apt-get install -y \
+            wget unzip openjdk-17-jdk \
+            libxcursor1 libxinerama1 libxrandr2 libxi6 libgl1 \
+            libasound2
 
-      - name: Download Android Export Templates
+      # ----------------------------
+      # Download Godot (FULL binary)
+      # ----------------------------
+      - name: Download Godot 4.2.2 (stable)
         run: |
-          mkdir -p ~/.local/share/godot/export_templates/4.2.1.stable
-          wget https://downloads.tuxfamily.org/godotengine/4.2.1/Godot_v4.2.1-stable_export_templates.tpz
-          unzip Godot_v4.2.1-stable_export_templates.tpz
-          mv templates/* ~/.local/share/godot/export_templates/4.2.1.stable/
+          GODOT_VERSION=4.2.2
+          wget https://downloads.tuxfamily.org/godotengine/${GODOT_VERSION}/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip
+          unzip Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip
+          mv Godot_v${GODOT_VERSION}-stable_linux.x86_64 godot
+          chmod +x godot
+          ./godot --version
 
+      # ----------------------------
+      # Download Android Export Templates
+      # ----------------------------
+      - name: Download Android export templates
+        run: |
+          GODOT_VERSION=4.2.2
+          TEMPLATE_DIR="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          mkdir -p "$TEMPLATE_DIR"
+          wget https://downloads.tuxfamily.org/godotengine/${GODOT_VERSION}/Godot_v${GODOT_VERSION}-stable_export_templates.tpz
+          unzip Godot_v${GODOT_VERSION}-stable_export_templates.tpz -d "$TEMPLATE_DIR"
+
+      # ----------------------------
+      # Export Android APK
+      # ----------------------------
       - name: Export Android APK
         run: |
-          ./godot --headless --export-release "Android" build.apk
+          mkdir -p build
+          ./godot --headless \
+            --export-release "Android" \
+            build/app.apk
 
-      - name: Upload APK
+      # ----------------------------
+      # Upload APK as Artifact
+      # ----------------------------
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: build.apk
+          path: build/app.apk
+
+      # ----------------------------
+      # Upload APK to GitHub Release (on tag)
+      # ----------------------------
+      - name: Upload APK to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/app.apk
