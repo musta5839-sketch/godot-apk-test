@@ -1,4 +1,4 @@
-name: Build Android APK (Godot 4.2.2)
+name: Build Android APK (Godot 4)
 
 on:
   push:
@@ -9,28 +9,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Godot
+        uses: firebelley/setup-godot@v2
+        with:
+          version: 4.2.2
+          use-dotnet: false
 
       - name: Install Android SDK
         uses: android-actions/setup-android@v3
         with:
           cmdline-tools-version: 11076708
 
-      - name: Download Godot 4.2.2 (GitHub release only)
-        run: |
-          GODOT_VERSION=4.2.2
-          curl -L --retry 5 --retry-delay 5 \
-            https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip \
-            -o godot.zip
-          unzip godot.zip
-          chmod +x Godot_v${GODOT_VERSION}-stable_linux.x86_64
-          mv Godot_v${GODOT_VERSION}-stable_linux.x86_64 godot
-
       - name: Export Android APK
         run: |
           mkdir -p build
-          ./godot --headless --export-release "Android" build/app-release.apk
+          godot --headless --export-release "Android" build/app-release.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
