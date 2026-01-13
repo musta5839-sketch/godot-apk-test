@@ -1,0 +1,22 @@
+name: Build Godot Android APK (Test)
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Build APK using Godot
+        uses: firebelley/godot-export@v5
+        with:
+          godot_version: 4.2.2
+          export_template: true
+          export_presets: export_presets.cfg
+          export_name: IronZone
+          export_path: build
