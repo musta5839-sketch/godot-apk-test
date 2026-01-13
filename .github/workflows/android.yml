@@ -1,4 +1,4 @@
-name: Build Godot Android APK (Test)
+name: Build Android APK (Godot)
 
 on:
   push:
@@ -12,11 +12,26 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Build APK using Godot
-        uses: firebelley/godot-export@v5
+      - name: Download Godot Headless
+        run: |
+          wget https://downloads.tuxfamily.org/godotengine/4.2.1/Godot_v4.2.1-stable_linux.x86_64.zip
+          unzip Godot_v4.2.1-stable_linux.x86_64.zip
+          chmod +x Godot_v4.2.1-stable_linux.x86_64
+          mv Godot_v4.2.1-stable_linux.x86_64 godot
+
+      - name: Download Android Export Templates
+        run: |
+          mkdir -p ~/.local/share/godot/export_templates/4.2.1.stable
+          wget https://downloads.tuxfamily.org/godotengine/4.2.1/Godot_v4.2.1-stable_export_templates.tpz
+          unzip Godot_v4.2.1-stable_export_templates.tpz
+          mv templates/* ~/.local/share/godot/export_templates/4.2.1.stable/
+
+      - name: Export Android APK
+        run: |
+          ./godot --headless --export-release "Android" build.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
-          godot_version: 4.2.2
-          export_template: true
-          export_presets: export_presets.cfg
-          export_name: IronZone
-          export_path: build
+          name: android-apk
+          path: build.apk
